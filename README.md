@@ -26,7 +26,6 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 - [Directory Structure](#directory-structure)
 - [Logic](#logic)
 - [Example Usage](#example-usage)
-- [Planned Modules](#planned-modules)
 - [License](#license)
 
 ---
@@ -130,32 +129,11 @@ ShellCat/
 
 ## Example Usage
 
-### Shell Mode
-
 ```bash
 
 
 ```
 
-### Graphical Mode
-
-```
-```
-
----
-
-## Planned Modules
-
-
-
---- 
-
-
-### Manual (Python 3.8 +)
-
-```bash
-pip install -r requirement.txt
-```
 
 ---
 
