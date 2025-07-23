@@ -11,7 +11,7 @@ Easily create reverse shells, transfer files, scan ports, or pipe raw data — a
 ---
 
 
-## 📦 Why ShellCat?
+## Why ShellCat?
 
 Whether you're building your own backdoor, testing network security, or automating dev tools —  
 **ShellCat** gives you full control over network sockets in a familiar, scriptable way.
@@ -31,7 +31,7 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 
 ---
 
-## 🔥 Features
+## Features
 
 - Remote command execution & interactive shells
 - File upload and transfer
