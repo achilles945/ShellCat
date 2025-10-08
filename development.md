@@ -1,5 +1,17 @@
 # ShellCat
 
+## Files
+
+- client.py
+- server.py
+- proxy.py
+- scanner.py
+- udp.py
+- executor.py
+- filetransfer.py
+- shell.py
+- utils.py
+
 
 ## Build
 
