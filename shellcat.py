@@ -4,6 +4,8 @@ import argparse
 import sys
 import shellcat.client as client
 import shellcat.server as server
+import shellcat.udp_client as udpclient
+import shellcat.udp_server as udpserver
 
 class ShellCat:
 	def __init__(self, args, target, port):
@@ -12,33 +14,50 @@ class ShellCat:
 		self.port = port
 		self.client = client.Cat()
 		self.server = server.Cat()
+		self.udpclient = udpclient.Cat()
+		self.udpserver = udpserver.Cat()
 
 	def run(self):
-		if self.args.listen:
+		if self.args.udp and self.args.listen:
+			self.udp_listen()
+		elif self.args.udp:
+			self.upd_send()
+		elif self.args.listen:
 			self.listen()
 		elif self.target and self.port:
 			self.send()
+
 
 	def send(self):
 		try:
 			self.client.tcp_client(self.target, self.port)
 		except Exception as e:
-			print(f"[!] Send error: {e}")
+			print(f"[!] TCP Send error: {e}")
 
 	def listen(self):
 		try:
 			self.server.tcp_server(self.target, self.port)
 		except Exception as e:
-			print(f"[!] Listen error: {e}")
+			print(f"[!] TCP Listen error: {e}")
+	
+	def upd_send(self):
+		try:
+			self.udpclient.udp_client_main(self.target, self.port)
+		except Exception as e:
+			print(f"[!] UDP Send Error: {e}")
 
-	def client_handler(self):
-		pass
+	def udp_listen(self):
+		try:
+			self.udpserver.udp_server_run(self.target, self.port)
+		except Exception as e:
+			print(f"[!] UDP Listen error {e}")
 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
 		description='ShellCat Net Tool',
 		formatter_class=argparse.RawDescriptionHelpFormatter)
+	parser.add_argument('-udp','--udp', action='store_true',help='Use UDP Protocol')
 	parser.add_argument('-l','--listen', action='store_true', help='listen mode')
 	parser.add_argument('-t', '--target', help='target IP or domain')
 	parser.add_argument('-p', '--port', type=int, help='target port')
