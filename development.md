@@ -49,4 +49,3 @@
 
 - **Graceful Connection Handling**
   - Manage connection timeouts, retries, and user interrupts.
-

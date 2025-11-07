@@ -6,13 +6,12 @@ import shellcat.client as client
 import shellcat.server as server
 
 class ShellCat:
-	def __init__(self, args, buffer, target, port):
+	def __init__(self, args, target, port):
 		self.args = args
-		self.buffer = buffer
 		self.target = target
 		self.port = port
 		self.client = client.Cat()
-		self.server = server.Cat(self.args)
+		self.server = server.Cat()
 
 	def run(self):
 		if self.args.listen:
@@ -53,13 +52,8 @@ if __name__ == '__main__':
 	target = args.pos_target or args.target
 	port = args.pos_port or args.port
 
-	if args.listen:
-		buffer = ''
-	else:
-		buffer = "Hello"
-
 	if not target or not port:
 		parser.error("You must provide a target and port, either as flags or positional arguments.")
 
-	sc = ShellCat(args, buffer, target, port)
+	sc = ShellCat(args, target, port)
 	sc.run()

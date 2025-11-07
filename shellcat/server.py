@@ -1,69 +1,65 @@
 # tcp server can be used when writing command shells or crafting a proxy
-
+# tcp_server_shell.py
 import socket
 import threading
-
-import shellcat2 
-#IP = '192.168.105.131'
-#PORT = 9998
+import sys
 
 class Cat:
+    def __init__(self):
+        pass
 
-	def __init__(self, args):
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.args = args
+    def handle_client_recv(self, client_sock):
+        """Read from client and dump to local stdout."""
+        try:
+            while True:
+                data = client_sock.recv(4096)
+                if not data:
+                    break  # client closed
+                sys.stdout.write(data.decode('utf-8', errors='replace'))
+                sys.stdout.flush()
+        except Exception:
+            pass
+        finally:
+            try:
+                client_sock.close()
+            except Exception:
+                pass
 
-	def tcp_server(self,IP, PORT):
-		try:
-			server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.socket.bind((IP, PORT))
-			self.socket.listen(5)
-			print(f'[*] Listening on {IP}:{PORT}')
-			while True:
-				client , address = self.socket.accept()
-				print(f'[*] Accepted connection from {address[0]}:{address[1]}')
-				client_handler = threading.Thread(target=self.handle_client, args=(client,))
-				client_handler.start()
-		except Exception as e:
-			print(e)
-			
+    def handle_client_send(self, client_sock):
+        """Read local stdin and send to client until EOF (Ctrl-D)."""
+        try:
+            for line in sys.stdin.buffer:   # bytes lines
+                client_sock.sendall(line)
+            # finished sending; optionally half-close
+            try:
+                client_sock.shutdown(socket.SHUT_WR)
+            except Exception:
+                pass
+        except Exception:
+            pass
 
-	def handle_client(self, client_socket):
-#		with client_socket as sock:
-#			request = sock.recv(1024)
-#			print(f'[*] Received: {request.decode("utf-8")}')
-#			sock.send(b'ACK')
-		if self.args.execute:
-			output = execute(self.args.execute)
-			client_socket.send(output.encode())
-		elif self.args.upload:
-			file_buffer = b''
-			while True:
-				data = client_socket.recv(4096)
-				if data:
-					file_buffer += data
-				else:
-					break
-			with open(self.args.upload, 'wb') as f:
-				f.write(file_buffer)
-			message = f'Saved file {self.args.upload}'
-			client_socket.send(message.encode())
-		elif self.args.command:
-			cmd_buffer = b''
-			while True:
-				try:
-					client_socket.send(b'SCAT: #> ')
-					while '\n' not in cmd_buffer.decode():
-						cmd_buffer += client_socket.recv(64)
-					response = execute(cmd_buffer.decode())
-					if response:
-						client_socket.send(response.encode())
-					cmd_buffer = b''
-				except Exception as e:
-					print(f'server killed {e}')
-					self.socket.close()
-					sys.exit()
+    def tcp_server(self, IP, PORT):
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind((IP, PORT))
+        srv.listen(5)
+        print(f'[*] Listening on {IP}:{PORT} — waiting for one client')
 
+        try:
+            client_sock, addr = srv.accept()
+            print(f'[*] Accepted connection from {addr[0]}:{addr[1]}')
 
+            # start receiver thread (client -> stdout)
+            t_recv = threading.Thread(target=self.handle_client_recv, args=(client_sock,), daemon=True)
+            t_recv.start()
 
+            # main thread will handle sending (stdin -> client)
+            self.handle_client_send(client_sock)
 
+            # wait for receiver to finish
+            t_recv.join()
+        finally:
+            try:
+                srv.close()
+            except Exception:
+                pass

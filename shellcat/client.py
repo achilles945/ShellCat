@@ -1,73 +1,54 @@
-# tcp client to test for services, send garbage data, fuzz.
+#!/usr/bin/env python3
+# shellcat/client.py
 
-import argparse
 import socket
 import sys
-
+import threading
 
 class Cat:
     def __init__(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.buffer = buffer
+        pass 
 
-    def tcp_client(self, target_host, target_port):
-        try:
-            self.socket.connect((target_host, target_port))
-            #if self.buffer:
-            #    self.socket.send(self.buffer)
-        except Exception as e:
-            print(f"[!] Connection failed: {e}")
-            return
-
+    def recv_loop(self, sock):
+        """Receive data from server and print to stdout."""
         try:
             while True:
-                #print("\n>>> ")
-                lines = []
-                while True:
-                    try:
-                        line = input()
-                    except EOFError:
-                        # treat Ctrl-D as exit from interactive loop
-                        print("\n[!] EOF received — exiting.")
-                        return
-                    if line == "":
-                        break
-                    lines.append(line)
+                data = sock.recv(4096)
+                if not data:
+                    break  # peer closed
+                sys.stdout.write(data.decode('utf-8', errors='replace'))
+                sys.stdout.flush()
+        except Exception:
+            pass
 
-                payload = "\r\n".join(lines) + "\r\n\r\n"
+    def send_loop(self, sock):
+        """Send stdin to server until EOF (Ctrl-D)."""
+        try:
+            for line in sys.stdin.buffer:  
+                sock.sendall(line)
+            
+            try:
+                sock.shutdown(socket.SHUT_WR)
+            except Exception:
+                pass
+        except Exception:
+            pass
 
-                # sendall to ensure full payload is transmitted
-                try:
-                    self.socket.sendall(payload.encode())
-                except BrokenPipeError:
-                    print("[!] Broken pipe when sending — remote closed connection.")
-                    break
-                except Exception as e:
-                    print(f"[!] Send error: {e}")
-                    break
+    def tcp_client(self, host: str, port: int):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, port))
 
-                response_bytes = bytearray()
-                self.socket.settimeout(2)
-                try:
-                    while True:
-                        data = self.socket.recv(4096)
-                        if not data:
-                            break
-                        response_bytes.extend(data)
-                except socket.timeout:
-                    pass
+        # Start receiver in background thread
+        t = threading.Thread(target=self.recv_loop, args=(sock,), daemon=True)
+        t.start()
 
-                # decode once, preserve unknown bytes with replacement
-                try:
-                    response = response_bytes.decode(errors='replace')
-                except Exception:
-                    # fallback, should not normally happen
-                    response = str(response_bytes)
-
-                print("\n[<] Response:")
-                print(response)
-
-        except KeyboardInterrupt:
-            print("\n[!] User terminated.")
+        try:
+            # Writer runs in main thread
+            self.send_loop(sock)
+            # Wait for receiver to finish (server may still send trailing data)
+            t.join()
         finally:
-            self.socket.close()
+            try:
+                sock.close()
+            except Exception:
+                pass
