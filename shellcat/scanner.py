@@ -3,12 +3,11 @@ import os
 import socket
 import struct
 import sys
-import threading
 import time
+import threading
 
-# subnet to target
-SUBNET = '192.168.29.0/24'
-# magic string we'll check ICMP responses for 
+
+
 MESSAGE = 'PYTHONRULES!'
 
 class IP:
@@ -39,16 +38,13 @@ class IP:
             print('%s No protocol for %s' % (e, self.protocol_num))
             self.protocol = src(self.protocol_num)
     def sniff(host):
-        if os.name == 'nt':
-            socket_protocol = socket.IPPROTO_IP
-        else:
-            socket_protocol = socket.IPPROTO_ICMP
+        
+        socket_protocol = socket.IPPROTO_ICMP
         sniffer = socket.socket(socket.AF_INET, 
                                 socket.SOCK_RAW, socket_protocol)
         sniffer.bind((host, 0))
         sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-        if os.name == 'nt':
-            sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+        
         try:
             while True:
                 raw_buffer = sniffer.recvfrom(65535) [0]
@@ -57,8 +53,6 @@ class IP:
                       (ip_header.protocol, ip_header.src_address,
                        ip_header.dst_address))
         except KeyboardInterrupt:
-            if os.name == 'nt':
-                snffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
             sys.exit()
 
 class ICMP:
@@ -70,16 +64,13 @@ class ICMP:
         self.id = header[3]
         self.seq = header[4]
     def sniff(host):
-        if os.name == 'nt':
-            socket_protocol = socket.IPPROTO_IP
-        else:
-            socket_protocol = socket.IPPROTO_ICMP
+        
+        socket_protocol = socket.IPPROTO_ICMP
         sniffer = socket.socket(socket.AF_INET,
                                 socket.SOCK_RAW, socket_protocol)
         sniffer.bind((host, 0))
         sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-        if os.name == 'nt':
-            sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+    
         try:
             while True:
                 raw_buffer = sniffer.recvfrom(65535) [0]
@@ -100,66 +91,63 @@ class ICMP:
                           (icmp_header.type, icmp_header.code))
 
         except KeyboardInterrupt:
-            if os.name == 'nt':
-                snffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
             sys.exit()
-# this sprays out UDP datagrams with our magic message
-def udp_sender():
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender: 
-        for ip in ipaddress.ip_network(SUBNET).hosts():
-            sender.sendto(bytes(MESSAGE, 'utf8'), (str(ip), 65212))
+
+def udp_sender(target_ip):
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
+        while True:
+            sender.sendto(bytes(MESSAGE, 'utf8'), (str(target_ip), 65212))
+            time.sleep(0.5)
+
+
 class Scanner:
-    def __init__(self, host):
+    def __init__(self, host, target_ip):
+        self.target_ip = target_ip
         self.host = host
-        if os.name == 'nt' :
-            socket_protocol = socket.IPPROTO_IP
-        else:
-            socket_protocol = socket.IPPROTO_ICMP
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, 
-                                    socket_protocol)
+        self.found_target = None
+        socket_protocol = socket.IPPROTO_ICMP
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket_protocol)
         self.socket.bind((host, 0))
+        self.stop_event = threading.Event()
         self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-        if os.name == 'nt':
-            self.socket.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+    
     def sniff(self):
-        hosts_up = set([f'{str(self.host)} *'])
+        timeout_seconds = 10.0
+        timer = threading.Timer(timeout_seconds, self.stop_event.set)
+        timer.start()
+
         try:
-            while True:
-                # read a packet
+            while not self.stop_event.is_set():
                 raw_buffer = self.socket.recvfrom(65535)[0]
-                # create an IP header from the first 20 bytes
                 ip_header = IP(raw_buffer[0:20])
-                # if it's ICMP, we want it
+
                 if ip_header.protocol == "ICMP":
                     offset = ip_header.ihl * 4
                     buf = raw_buffer[offset:offset + 8]
                     icmp_header = ICMP(buf)
-                    # check for TYPE 3 and CODE
+
                     if icmp_header.code == 3 and icmp_header.type == 3:
-                        if ipaddress.ip_address(ip_header.src_address) in ipaddress.IPv4Network(SUBNET):
-                            if raw_buffer[len(raw_buffer) - len(MESSAGE):] == bytes(MESSAGE, 'utf8'):
+                        if ip_header.src_address == self.target_ip:
+                            if raw_buffer[-len(MESSAGE):] == bytes(MESSAGE, 'utf8'):
                                 tgt = str(ip_header.src_address)
-                                if tgt != self.host and tgt not in hosts_up:
-                                    hosts_up.add(str(ip_header.src_address))
-                                    print(f'Host Up: {tgt}')
+                                print(f'Host Up: {tgt}')
+                                self.found_target = tgt
+                                self.stop_event.set()
         except KeyboardInterrupt:
-            if os.name == 'nt':
-                self.socket.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
-            print('\nUser Interrupted.')
-            if hosts_up:
-                print(f'\n\nSummary: Host up on {SUBNET} ')
-            for host in sorted(hosts_up):
-                print(f'{host}')
-            print('')
-            sys.exit()
-if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        host = sys.argv[1]
-    else:
-        host = '192.168.105.131'
-    s = Scanner(host)
-    time.sleep(5)
-    t = threading.Thread(target=udp_sender)
-    t.start()
-    s.sniff()
+            pass
+
+        timer.cancel()
+
+
+class Cat:
+    @staticmethod
+    def Scan(target, host_ip):
+        # target: string IP or hostname (e.g. '8.8.8.8' or 'google.com')
+        # host_ip: local bind IP string (e.g. '0.0.0.0' or '192.168.29.57')
+        target_ip = ipaddress.ip_address(target)  # keep as IPv4Address
+        s = Scanner(host_ip, target_ip)           # pass both args
+        time.sleep(1)
+        t = threading.Thread(target=udp_sender, args=(target_ip,), daemon=True)
+        t.start()
+        s.sniff()
 
