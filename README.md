@@ -36,9 +36,9 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 - File upload and transfer
 - TCP port scanning (built-in)
 - TCP client/server communication
-- Modular Python architecture for easy extension
-- Works on Linux, macOS, and Windows
-
+- UDP client/server communication
+- Python architecture for easy extension
+- Works on Linux only
 
 
 ---
@@ -52,18 +52,13 @@ ShellCat/
 │   ├── __init__.py
 │   ├── client.py
 │   ├── server.py
-│   ├── proxy.py
-│   ├── udp.py
-│   ├── executor.py
-│   ├── filetransfer.py
-│   ├── shell.py
+│   ├── udp_client.py
+│   ├── udp_server.py
 │   ├── scanner.py
-│   └── utils.py
 │
 ├── shellcat.py                # Main CLI script (entrypoint users run)
 ├── README.md
 ├── LICENSE
-├── requirements.txt
 └── setup.py                 # Optional: if you package/install your tool
 
 ```
@@ -96,20 +91,10 @@ ShellCat/
           │                                            │
           ▼                                            ▼
 ┌──────────────────────┐                    ┌────────────────────────────┐
-│ Send/Receive Data    │◄─────┐      ┌─────►│ Handle Connection Type     │
-│ (user input loop)    │      │      │      │ (Shell, Upload, Execute)  │
-└──────────────────────┘      │      │      └──────────┬────────────────┘
-                              │      │                 │
-                              │      │        ┌────────▼────────┐
-                              │      │        │ executor.py     │ ← Command execution
-                              │      │        ├─────────────────┤
-                              │      │        │ filetransfer.py │ ← File upload handler
-                              │      │        ├─────────────────┤
-                              │      │        │ shell.py        │ ← Interactive shell loop
-                              │      │        └─────────────────┘
-                              │      │
-                              │      ▼
-                              │  utils.py  ← Socket helpers, shared tools
+│ Send/Receive Data    │◄─────┐             │ Handle Connection Type     │
+│ (user input loop)    │      │             │ (Shell, Upload, Execute)   │
+└──────────────────────┘      │             └────────────────────────────┘
+                              │                       
                               │
                               ▼
                      scanner.py (optional port scanning)
@@ -122,18 +107,34 @@ ShellCat/
 ## Example Usage
 
 ```bash
-# Listen on port 8888
-python3 shellcat.py -l 127.0.0.1 8888
+# Press CTRL+D to send request
 
-# Connect to port 8888 via client
-python3 shellcat.py 127.0.0.1 8888
+# Start a Bind Shell (Server Mode)
+python3 shellcat.py -l -t 0.0.0.0 -p 8888 -c
+
+# Connect as Client(Interactive)
+python3 shellcat.py -t <server-ip> -p 8888
+
+# Execute Command on connect (Server Mode)
+python3 shellcat.py 0.0.0.0 4444 -l -e "uname -a"
+
+# Scan a Host
+python3 shellcat.py -sc <target ip> -ht <host-ip>
+
+
+# Upload a file to server
+# Server
+python3 shellcat.py -l -u /tmp/upload.bin -p 9001 -t host-ip
+
+# Client
+cat file.bin | python3 shellcat.py 192.168.1.5 9001
+
 
 # Connect to remote server
 python3 shellcat.py wwww.example.com 80
 GET / HTTP/1.1
 Host:example.com
 
-# Press CTRL+D to send request
 ```
 
 

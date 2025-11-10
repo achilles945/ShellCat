@@ -10,6 +10,7 @@ import threading
 
 MESSAGE = 'PYTHONRULES!'
 
+
 class IP:
     def __init__(self, buff=None):
         header = struct.unpack('<BBHHHBBH4s4s', buff)
@@ -140,14 +141,12 @@ class Scanner:
 
 
 class Cat:
+
     @staticmethod
-    def Scan(target, host_ip):
-        # target: string IP or hostname (e.g. '8.8.8.8' or 'google.com')
-        # host_ip: local bind IP string (e.g. '0.0.0.0' or '192.168.29.57')
-        target_ip = ipaddress.ip_address(target)  # keep as IPv4Address
-        s = Scanner(host_ip, target_ip)           # pass both args
+    def Scan(target,host_ip):
+        target_ip = ipaddress.ip_address(target)
+        s = Scanner(host_ip, target_ip)
         time.sleep(1)
         t = threading.Thread(target=udp_sender, args=(target_ip,), daemon=True)
         t.start()
         s.sniff()
-

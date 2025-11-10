@@ -1,22 +1,5 @@
 # ShellCat
 
-## Files
-
-- client.py
-- server.py
-- scanner.py
-- udp_client.py
-- udp_server.py
-
-- 
-
-- proxy.py
-- executor.py
-- filetransfer.py
-- shell.py
-- utils.py
-
-
 ## Build
 
 ### Current Features
@@ -38,15 +21,15 @@
 - **Graceful Connection Handling**
   - Manage connection timeouts, retries, and user interrupts.
 
-### Future Plans 
-
-- **Remote Shell**
-  - Open an interactive remote command shell.
+- **Remote Bind Shell**
+  - Open an interactive remote bind shell.
   - Execute commands remotely and receive output.
 
 - **Data Transfer**
   - Send and receive arbitrary data over the network.
   - Transfer files between machines.
+
+### Future Plans
 
 - **Proxying**
   - Relay traffic from one port to another.
