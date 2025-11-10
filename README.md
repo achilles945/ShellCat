@@ -38,7 +38,7 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 - TCP client/server communication
 - UDP client/server communication
 - Python architecture for easy extension
-- Works on Linux only
+- Works on Linux based Operating Systems
 
 
 ---
