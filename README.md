@@ -122,8 +122,18 @@ ShellCat/
 ## Example Usage
 
 ```bash
+# Listen on port 8888
+python3 shellcat.py -l 127.0.0.1 8888
 
+# Connect to port 8888 via client
+python3 shellcat.py 127.0.0.1 8888
 
+# Connect to remote server
+python3 shellcat.py wwww.example.com 80
+GET / HTTP/1.1
+Host:example.com
+
+# Press CTRL+D to send request
 ```
 
 
