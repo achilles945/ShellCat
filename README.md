@@ -1,6 +1,5 @@
 # ShellCat
 
-#### **⚠️ This project is currently in development. Some features and documentation may be incomplete. ⚠️**
 
 **ShellCat** is a powerful, Python-based Netcat clone designed for hackers, developers, and network engineers.  
 It offers everything you expect from traditional Netcat — plus the flexibility of Python.
@@ -60,14 +59,6 @@ ShellCat/
 │   ├── shell.py
 │   ├── scanner.py
 │   └── utils.py
-│
-├── tests/                   # Automated test scripts
-│   ├── test_client.py
-│   ├── test_server.py
-│   ├── test_executor.py
-│   ├── test_filetransfer.py
-│   ├── test_scanner.py
-│   └── test_udp.py
 │
 ├── shellcat.py                # Main CLI script (entrypoint users run)
 ├── README.md
