@@ -8,6 +8,8 @@ Easily create reverse shells, transfer files, scan ports, or pipe raw data — a
 
 > - _Stream. Shell. Transfer. Scan. Dominate the network._
 
+> **Note:** ShellCat currently supports Linux-based operating systems only.
+
 ---
 
 
@@ -23,6 +25,7 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 ## Table of Contents
 
 - [Features](#features)
+- [Installation](#installation)
 - [Directory Structure](#directory-structure)
 - [Logic](#logic)
 - [Example Usage](#example-usage)
@@ -43,6 +46,22 @@ Built for flexibility. Inspired by Netcat. Powered by Python.
 
 ---
 
+## Installation
+
+To make the tool available system-wide, run the setup script:
+
+```bash
+chmod +x setup.sh
+sudo ./setup.sh
+```
+
+After installation, you can run ShellCat from anywhere:
+```bash
+shellcat --help
+```
+
+---
+
 ## Directory Structure
 
 ```
@@ -59,7 +78,7 @@ ShellCat/
 ├── shellcat.py                # Main CLI script (entrypoint users run)
 ├── README.md
 ├── LICENSE
-└── setup.py                 # Optional: if you package/install your tool
+└── setup.sh                 # Optional: if you want to make the tool available System-wide
 
 ```
 
