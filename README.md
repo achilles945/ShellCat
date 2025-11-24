@@ -129,33 +129,39 @@ ShellCat/
 # Press CTRL+D to send request
 
 # Start a Bind Shell (Server Mode)
-python3 shellcat.py -l -t 0.0.0.0 -p 8888 -c
+shellcat -l -t 0.0.0.0 -p 8888 -c
 
 # Connect as Client(Interactive)
-python3 shellcat.py -t <server-ip> -p 8888
+shellcat -t <server-ip> -p 8888
 
 # Execute Command on connect (Server Mode)
-python3 shellcat.py 0.0.0.0 4444 -l -e "uname -a"
+shellcat 0.0.0.0 4444 -l -e "uname -a"
 
 # Scan a Host
-python3 shellcat.py -sc <target ip> -ht <host-ip>
+shellcat -sc <target ip> -ht <host-ip>
 
 
 # Upload a file to server
 # Server
-python3 shellcat.py -l -u /tmp/upload.bin -p 9001 -t host-ip
+shellcat -l -u /tmp/upload.bin -p 9001 -t host-ip
 
 # Client
-cat file.bin | python3 shellcat.py 192.168.1.5 9001
+cat file.bin | shellcat 192.168.1.5 9001
 
 
 # Connect to remote server
-python3 shellcat.py wwww.example.com 80
+shellcat wwww.example.com 80
 GET / HTTP/1.1
 Host:example.com
 
 ```
 
+### Without executing setup.sh
+
+Example:
+```bash
+python3 shellcat.py -l -t 0.0.0.0 -p 8888 -c
+```
 
 ---
 
